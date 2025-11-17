@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Paramètres du Serveur</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0f0f0f;
+      color: white;
+    }
+    
+    .settings-container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #1a1a1a;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    h2 {
+      color: #f3f3f3;
+      margin-top: 0;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #260064;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #cccccc;
+    }
+    
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: #6b6b6b;
+      color: white;
+      border: 1px solid #000000;
+      font-size: 14px;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #b91c1c;
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.2s;
+    }
+    
+    button#validateButton {
+      background-color: #b91c1c;
+      color: white;
+    }
+    
+    button#validateButton:hover {
+      background-color: #9b1212;
+    }
+    
+    button#cancelButton {
+      background-color: #333;
+      color: white;
+    }
+    
+    button#cancelButton:hover {
+      background-color: #444;
+    }
+    
+    /* Style pour les sliders */
+    .slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #333;
+      outline: none;
+      margin-top: 8px;
+    }
+    
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #b91c1c;
+      cursor: pointer;
+    }
+    
+    .slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #b91c1c;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <h2>Parametros de Servidor</h2>
+    
+    <div class="form-group">
+      <label for="serverOption">Seleccione un servidor :</label>
+      <select name="serverOption" id="serverOption">
+        <option value="default">Défaut</option>
+        <option value="kr">Corea</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="resolutionOption">Resolución de vídeo :</label>
+      <select name="resolutionOption" id="resolutionOption">
+        <option value="720p">720p</option>
+        <option value="1080p">1080p</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="hostBitrateSlider">Host de tasa de bits (Mbps): <span id="hostBitrateValue">5</span></label>
+      <input type="range" id="hostBitrateSlider" name="hostBitrateSlider" 
+             min="0.2" max="15" step="0.1" value="5" class="slider">
+    </div>
+    
+    <div class="form-group">
+      <label for="playerBitrateSlider">Bits de Jugador (Mbps): <span id="playerBitrateValue">0.5</span></label>
+      <input type="range" id="playerBitrateSlider" name="playerBitrateSlider" 
+             min="0.2" max="15" step="0.1" value="0.5" class="slider">
+    </div>
+    
+    <div class="button-group">
+      <button id="cancelButton">Anular</button>
+      <button id="validateButton">Validar</button>
+    </div>
+  </div>
+  
+  <script>
+    // Administrar actualizaciones en tiempo real de los valores del control deslizante
+    document.getElementById("hostBitrateSlider").addEventListener("input", function() {
+      document.getElementById("hostBitrateValue").textContent = this.value;
+    });
+    
+    document.getElementById("playerBitrateSlider").addEventListener("input", function() {
+      document.getElementById("playerBitrateValue").textContent = this.value;
+    });
+    
+    // Cargar configuración actual
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        const savedSettings = localStorage.getItem("BetterXcloud");
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          // Establezca el valor seleccionado en el menú desplegable del servidor
+          if (settings["server.bypassRestriction"] === "kr" && settings["server.region"] === "KoreaCentral") {
+            document.getElementById("serverOption").value = "kr";
+          } else {
+            document.getElementById("serverOption").value = "default";
+          }
+          
+          // Establezca el valor seleccionado en el menú desplegable de resolución
+          if (settings["stream.video.resolution"]) {
+            document.getElementById("resolutionOption").value = settings["stream.video.resolution"];
+          }
+          
+          // Establecer los valores del control deslizante de tasa de bits
+          if (settings["host.bitrate"]) {
+            const hostBitrateMbps = settings["host.bitrate"] / 1000000;
+            document.getElementById("hostBitrateSlider").value = hostBitrateMbps;
+            document.getElementById("hostBitrateValue").textContent = hostBitrateMbps;
+          }
+          
+          if (settings["player.bitrate"]) {
+            const playerBitrateMbps = settings["player.bitrate"] / 1000000;
+            document.getElementById("playerBitrateSlider").value = playerBitrateMbps;
+            document.getElementById("playerBitrateValue").textContent = playerBitrateMbps;
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des paramètres:", error);
+      }
+    });
+    
+    // Función para inyectar parámetros
+    function injectBetterXcloudSettings(settings) {
+      try {
+        console.log("Injection des paramètres BetterXcloud :", settings);
+        localStorage.setItem("BetterXcloud", JSON.stringify(settings));
+        console.log("Paramètres enregistrés avec succès dans localStorage");
+        
+        // Cierre la ventana usando la API de Electron en lugar de window.location.href
+        if (window.electronAPI && window.electronAPI.closeWindow) {
+          console.log("Fermeture de la fenêtre via electronAPI.closeWindow");
+          window.electronAPI.closeWindow();
+        } else {
+          console.log("Tentative de fermeture avec window.close()");
+          window.close();
+        }
+      } catch (error) {
+        console.error("Erreur lors de l'injection des paramètres BetterXcloud:", error);
+      }
+    }
+    
+    // Gestionar el clic en el botón Validar
+    document.getElementById("validateButton").addEventListener("click", function () {
+      console.log("Bouton Valider cliqué");
+      // Recuperar el valor seleccionado para el servidor
+      var selectedServer = document.querySelector('select[name="serverOption"]').value;
+      console.log("Option serveur sélectionnée:", selectedServer);
+      
+      // Recuperar el valor seleccionado para la resolución
+      var selectedResolution = document.querySelector('select[name="resolutionOption"]').value;
+      console.log("Option résolution sélectionnée:", selectedResolution);
+      
+      // Recuperar los valores de los controles deslizantes de tasa de bits
+      var hostBitrate = parseFloat(document.getElementById("hostBitrateSlider").value) * 1000000;
+      var playerBitrate = parseFloat(document.getElementById("playerBitrateSlider").value) * 1000000;
+      console.log("Bitrate host:", hostBitrate, "bps");
+      console.log("Bitrate player:", playerBitrate, "bps");
+      
+      var settings;
+      
+      if (selectedServer === "kr") {
+        settings = {
+          "server.bypassRestriction": "kr",
+          "server.region": "KoreaCentral"
+        };
+      } else {
+        settings = {
+          "server.bypassRestriction": "off",
+          "server.region": "default"
+        };
+      }
+      
+      // Añadir resolución a la configuración
+      settings["stream.video.resolution"] = selectedResolution;
+      
+      // Agregar valores de tasa de bits a la configuración
+      settings["host.bitrate"] = hostBitrate;
+      settings["player.bitrate"] = playerBitrate;
+      
+      console.log("Paramètres préparés:", settings);
+      // Inyectando parámetros y cerrando la ventana
+      injectBetterXcloudSettings(settings);
+    });
+    
+    // Administrar el botón Cancelar
+    document.getElementById("cancelButton").addEventListener("click", function() {
+      console.log("Bouton Annuler cliqué");
+      // Simplemente cierra la ventana sin guardar
+      if (window.electronAPI && window.electronAPI.closeWindow) {
+        console.log("Fermeture de la fenêtre via electronAPI.closeWindow");
+        window.electronAPI.closeWindow();
+      } else {
+        console.log("Tentative de fermeture avec window.close()");
+        window.close();
+      }
+    });
+  </script>
+</body>
+</html> 
